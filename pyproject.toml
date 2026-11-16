@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "package-foundry"
 authors = [
-    {'name' = 'Beyonder GmbH', 'email' = 'hello@beyonder.de'},
+    {'name' = 'Beyonder GmbH', 'email' = 'hello@beyonder.eu'},
 ]
 readme = "README.md"
 classifiers = [
@@ -46,7 +46,7 @@ dev = [
 [project.urls]
 'Homepage' = 'https://github.com/beyonder-deutschland/package-foundry/'
 'Documentation' = 'https://github.com/beyonder-deutschland/package-foundry/blob/main/README.md'
-'Maintained by' = 'https://beyonder.de/'
+'Maintained by' = 'https://beyonder.eu/'
 'Bugtracker' = 'https://github.com/beyonder-deutschland/package-foundry/issues'
 'Changelog' = 'https://github.com/beyonder-deutschland/package-foundry/blob/main/CHANGES.md'
 

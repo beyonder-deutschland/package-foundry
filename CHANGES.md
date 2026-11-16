@@ -10,7 +10,7 @@
 * Rendering a package that still has an `.ambient-package-update/` directory or imports `ambient_package_update`
   stops with a hint to run `migrate`
 * The `run-tests` command passes `--ds settings` only when `tests_require_django` is set
-* Author, licence holder and the rendered Sphinx copyright name Beyonder GmbH
+* Author, licence holder and the rendered Sphinx copyright name Beyonder GmbH; contact is hello@beyonder.eu
 * Rendered packages reference `package-foundry` in their development dependencies, pre-commit configuration, ruff
   configuration and maintenance notice
 * The test command in the rendered `CONTRIBUTING.md` passes `--ds settings` only when `tests_require_django` is set,
