@@ -6,7 +6,7 @@
 # Package Foundry
 
 This repository will help keep all Python packages following a certain basic structure tidy and up-to-date. It's being
-maintained by [Beyonder Deutschland](https://beyonder.de).
+maintained by [Beyonder GmbH](https://beyonder.de).
 
 This package will render all required configuration and installation files for your target package.
 
@@ -72,18 +72,18 @@ from package_foundry.metadata.ruff_ignored_inspection import (
 METADATA = PackageMetadata(
     package_name="my_package_name",
     github_package_group="beyonder-deutschland",
-    licenser="Beyonder Deutschland",
+    licenser="Beyonder GmbH",
     license=LICENSE_MIT,
     development_status=DEPLOYMENT_STATUS_STABLE,
     claim="A short one-line description of what your package does.",
     authors=[
         PackageAuthor(
-            name="Beyonder Deutschland",
+            name="Beyonder GmbH",
             email="hello@beyonder.de",
         ),
     ],
     maintainer=PackageMaintainer(
-        name="Beyonder Deutschland",
+        name="Beyonder GmbH",
         url="https://beyonder.de/",
         email="hello@beyonder.de",
     ),

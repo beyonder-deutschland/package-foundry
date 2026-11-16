@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "package-foundry"
 authors = [
-    {'name' = 'Beyonder Deutschland', 'email' = 'hello@beyonder.de'},
+    {'name' = 'Beyonder GmbH', 'email' = 'hello@beyonder.de'},
 ]
 readme = "README.md"
 classifiers = [

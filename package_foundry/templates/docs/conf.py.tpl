@@ -36,7 +36,7 @@ from {{ module_name }} import __version__  # noqa: E402
 # -- Project information -----------------------------------------------------
 
 project = "{{ package_name|replace("_", "-") }}"
-copyright = "{{ current_year }}, Beyonder Deutschland"  # noqa: A001
+copyright = "{{ current_year }}, Beyonder GmbH"  # noqa: A001
 author = "{{ maintainer.name }} <{{ maintainer.email }}>"
 version = __version__
 release = __version__
