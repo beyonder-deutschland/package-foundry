@@ -10,6 +10,8 @@
 * Packages that still have an `.ambient-package-update/` directory keep rendering, with a warning pointing to `migrate`
 * Rendered packages reference `package-foundry` in their development dependencies, pre-commit configuration, ruff
   configuration and maintenance notice
+* The test command in the rendered `CONTRIBUTING.md` passes `--ds settings` only when `tests_require_django` is set,
+  like the coverage command does
 
 **26.11.2 (2026-11-16)**
 * The rendered documentation badge is served by shields.io. Read the Docs answers its own badge URL with a redirect,

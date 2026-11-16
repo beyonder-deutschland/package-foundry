@@ -18,7 +18,7 @@
 
 - Run tests
   ````
-  pytest --ds settings tests
+  pytest {% if tests_require_django %}--ds settings {% endif %}tests
   ````
 
 - Check coverage
