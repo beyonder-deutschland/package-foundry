@@ -6,7 +6,7 @@
 # Package Foundry
 
 This repository will help keep all Python packages following a certain basic structure tidy and up-to-date. It's being
-maintained by [Beyonder GmbH](https://beyonder.eu).
+maintained by [Beyonder GmbH](https://beyonder.de).
 
 This package will render all required configuration and installation files for your target package.
 
@@ -84,7 +84,7 @@ METADATA = PackageMetadata(
     ],
     maintainer=PackageMaintainer(
         name="Beyonder GmbH",
-        url="https://beyonder.eu/",
+        url="https://beyonder.de/",
         email="hello@beyonder.eu",
     ),
     readme_content=ReadmeContent(

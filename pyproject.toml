@@ -46,7 +46,7 @@ dev = [
 [project.urls]
 'Homepage' = 'https://github.com/beyonder-deutschland/package-foundry/'
 'Documentation' = 'https://github.com/beyonder-deutschland/package-foundry/blob/main/README.md'
-'Maintained by' = 'https://beyonder.eu/'
+'Maintained by' = 'https://beyonder.de/'
 'Bugtracker' = 'https://github.com/beyonder-deutschland/package-foundry/issues'
 'Changelog' = 'https://github.com/beyonder-deutschland/package-foundry/blob/main/CHANGES.md'
 
