@@ -3,7 +3,6 @@ import re
 import subprocess
 import sys
 from datetime import UTC, datetime
-from functools import cache
 from importlib import import_module
 from os.path import basename
 from pathlib import Path
@@ -32,33 +31,21 @@ LEGACY_NAMES = {
 app = typer.Typer()
 
 
-@cache
-def get_config_dir() -> Path:
-    """
-    Return the target package's configuration directory, .package-foundry/.
-
-    Packages still configured in .ambient-package-update/ keep working: that directory is used when
-    .package-foundry/ does not exist, with a warning pointing to the migrate command.
-    """
-    if not CONFIG_DIR.exists() and LEGACY_CONFIG_DIR.exists():
-        typer.secho(
-            f'> Using the deprecated directory "{LEGACY_CONFIG_DIR}". Run "package-foundry migrate" to rename it '
-            f'to "{CONFIG_DIR}".',
-            fg=typer.colors.YELLOW,
-            err=True,
-        )
-        return LEGACY_CONFIG_DIR
-    return CONFIG_DIR
-
-
 @app.command()
 def get_metadata() -> PackageMetadata:
     """
     Load and return the PackageMetadata instance from the target package's
     .package-foundry/metadata.py file.
+
+    Packages still configured for ambient-package-update are pointed to the migrate command.
     """
-    config_dir = get_config_dir()
-    sys.path.append(f"./{config_dir}")
+    if not CONFIG_DIR.exists() and LEGACY_CONFIG_DIR.exists():
+        raise RuntimeError(
+            f'Found "{LEGACY_CONFIG_DIR}" from ambient-package-update. Run "package-foundry migrate" to move it to '
+            f'"{CONFIG_DIR}".'
+        )
+
+    sys.path.append(f"./{CONFIG_DIR}")
     try:
         m = import_module("metadata")
     except ModuleNotFoundError as e:
@@ -66,7 +53,7 @@ def get_metadata() -> PackageMetadata:
             raise RuntimeError(f'Please create a directory "{CONFIG_DIR}" and add a "metadata.py".') from e
         if e.name and e.name.split(".")[0] in LEGACY_NAMES:
             raise RuntimeError(
-                f'"{config_dir / "metadata.py"}" imports from "{e.name}". Run "package-foundry migrate" to switch it '
+                f'"{CONFIG_DIR / "metadata.py"}" imports from "{e.name}". Run "package-foundry migrate" to switch it '
                 f'to "package_foundry".'
             ) from e
         raise
@@ -168,7 +155,7 @@ def create_rendered_file(*, template: Path | str, relative_target_path: Path | s
     env = Environment(
         loader=FileSystemLoader(
             [
-                get_config_dir() / "templates",
+                CONFIG_DIR / "templates",
                 TEMPLATE_PATH,
             ]
         ),
@@ -236,7 +223,7 @@ def get_local_template_list(*, include_snippets: bool = False) -> list[str]:
     extra documentation pages. Returns an empty list if the directory does not exist.
     Snippets are excluded by default.
     """
-    local_template_path = get_config_dir() / "templates"
+    local_template_path = CONFIG_DIR / "templates"
     if not local_template_path.exists():
         return []
     return [
@@ -351,7 +338,8 @@ def run_tests():
     dependency_list = " ".join(f'"{d}"' for d in dependency_list)
     subprocess.call(f"pip install {dependency_list}", shell=True)
 
-    subprocess.call("pytest --ds settings tests", shell=True)
+    django_settings = "--ds settings " if package_data.tests_require_django else ""
+    subprocess.call(f"pytest {django_settings}tests", shell=True)
 
 
 @app.command()
@@ -378,7 +366,7 @@ def eject_template():
 
     contents = Path(TEMPLATE_PATH / template).read_text()
 
-    output = get_config_dir() / "templates" / template
+    output = CONFIG_DIR / "templates" / template
     os.makedirs(output.parent, exist_ok=True)
     output.write_text(contents)
 
@@ -390,31 +378,51 @@ def migrate():
 
     Renames .ambient-package-update/ to .package-foundry/ and replaces the ambient-package-update
     package and module names in every file inside it, i.e. metadata.py and ejected templates.
-    Run render-templates afterwards so the rendered files pick up the new names.
+    Running it again on an already migrated package only repeats the replacement, so an interrupted
+    migration can be finished. Run render-templates afterwards so the rendered files pick up the new names.
     """
-    if CONFIG_DIR.exists():
-        typer.echo(f'"{CONFIG_DIR}" already exists, nothing to migrate.')
-        raise typer.Exit(code=1 if LEGACY_CONFIG_DIR.exists() else 0)
-    if not LEGACY_CONFIG_DIR.exists():
-        typer.echo(f'Neither "{CONFIG_DIR}" nor "{LEGACY_CONFIG_DIR}" found. Run this command from the package root.')
+    if LEGACY_CONFIG_DIR.exists():
+        if CONFIG_DIR.exists():
+            typer.secho(
+                f'Both "{LEGACY_CONFIG_DIR}" and "{CONFIG_DIR}" exist. Move the remaining files from '
+                f'"{LEGACY_CONFIG_DIR}" to "{CONFIG_DIR}", delete it and run this command again.',
+                fg=typer.colors.RED,
+                err=True,
+            )
+            raise typer.Exit(code=1)
+        LEGACY_CONFIG_DIR.rename(CONFIG_DIR)
+        print(f'> Renamed "{LEGACY_CONFIG_DIR}" to "{CONFIG_DIR}".')
+    elif not CONFIG_DIR.exists():
+        typer.secho(
+            f'Neither "{CONFIG_DIR}" nor "{LEGACY_CONFIG_DIR}" found. Run this command from the package root.',
+            fg=typer.colors.RED,
+            err=True,
+        )
         raise typer.Exit(code=1)
 
-    LEGACY_CONFIG_DIR.rename(CONFIG_DIR)
-    print(f'> Renamed "{LEGACY_CONFIG_DIR}" to "{CONFIG_DIR}".')
-
+    skipped_paths = []
     for path in sorted(CONFIG_DIR.rglob("*")):
         if not path.is_file() or "__pycache__" in path.parts:
             continue
         try:
-            content = path.read_text(encoding="utf-8")
+            content = path.read_text(encoding="utf-8", newline="")
         except UnicodeDecodeError:
+            skipped_paths.append(path)
             continue
         migrated = content
         for legacy_name, name in LEGACY_NAMES.items():
             migrated = migrated.replace(legacy_name, name)
         if migrated != content:
-            path.write_text(migrated, encoding="utf-8")
+            path.write_text(migrated, encoding="utf-8", newline="")
             print(f'> Updated "{path}".')
+
+    for path in skipped_paths:
+        typer.secho(
+            f'> Skipped "{path}" because it is not UTF-8 encoded. Replace any '
+            f"{' / '.join(LEGACY_NAMES)} in it by hand.",
+            fg=typer.colors.YELLOW,
+            err=True,
+        )
 
     print('Migration finished. Run "package-foundry render-templates" to update the rendered files.')
 

@@ -41,7 +41,8 @@ These steps will tell you how to update a package which was created by using thi
   `.package-foundry/` and switches the imports in `metadata.py` and in ejected templates to `package_foundry`
 - Run `package-foundry render-templates`
 
-Until a package is migrated, `package-foundry` keeps reading `.ambient-package-update/` and prints a warning.
+Until a package is migrated, `render-templates` stops with a hint to run `migrate`. Running `migrate` again is safe,
+it finishes an interrupted migration.
 
 ## How to create a new package
 

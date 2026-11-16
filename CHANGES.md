@@ -7,7 +7,9 @@
 * Added the `package-foundry` console command, e.g. `package-foundry render-templates`
 * Added the `migrate` command, which renames `.ambient-package-update/` to `.package-foundry/` and switches the
   imports inside it to `package_foundry`
-* Packages that still have an `.ambient-package-update/` directory keep rendering, with a warning pointing to `migrate`
+* Rendering a package that still has an `.ambient-package-update/` directory or imports `ambient_package_update`
+  stops with a hint to run `migrate`
+* The `run-tests` command passes `--ds settings` only when `tests_require_django` is set
 * Rendered packages reference `package-foundry` in their development dependencies, pre-commit configuration, ruff
   configuration and maintenance notice
 * The test command in the rendered `CONTRIBUTING.md` passes `--ds settings` only when `tests_require_django` is set,
