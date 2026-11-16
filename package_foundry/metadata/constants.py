@@ -15,7 +15,7 @@ DEV_DEPENDENCIES = [
     "uv~=0.13",
     "keyring~=25.7",
     # Build
-    "ambient-package-update",
+    "package-foundry",
 ]
 
 SUPPORTED_DJANGO_VERSIONS = [

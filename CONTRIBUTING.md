@@ -58,5 +58,5 @@ uv publish --publish-url https://test.pypi.org/legacy/ --username __token__
 You can then test the installation from TestPyPI:
 
 ```bash
-uv pip install --index-url https://test.pypi.org/simple/ ambient-package-update
+uv pip install --index-url https://test.pypi.org/simple/ package-foundry
 ```

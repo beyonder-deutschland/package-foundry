@@ -1,9 +1,9 @@
-[![PyPI release](https://img.shields.io/pypi/v/ambient-package-update.svg)](https://pypi.org/project/ambient-package-update/)
-[![Downloads](https://static.pepy.tech/badge/ambient-package-update)](https://pepy.tech/project/ambient-package-update)
+[![PyPI release](https://img.shields.io/pypi/v/package-foundry.svg)](https://pypi.org/project/package-foundry/)
+[![Downloads](https://static.pepy.tech/badge/package-foundry)](https://pepy.tech/project/package-foundry)
 [![Linting](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Coding Style](https://img.shields.io/badge/code%20style-Ruff-000000.svg)](https://github.com/astral-sh/ruff)
 
-# Ambient Package Update
+# Package Foundry
 
 This repository will help keep all Python packages following a certain basic structure tidy and up-to-date. It's being
 maintained by [Beyonder Deutschland](https://beyonder.de).
@@ -28,9 +28,20 @@ These steps will tell you how to update a package which was created by using thi
 
 - Navigate to the main directory of **your** package
 - Activate your virtualenv
-- Run `python -m ambient_package_update.cli render-templates`
+- Run `package-foundry render-templates`
 - Validate the changes and increment the version accordingly
 - Release a new version of your target package
+
+## Migrating from ambient-package-update
+
+`package-foundry` is the successor of `ambient-package-update`. To move a package over:
+
+- Replace `ambient-package-update` with `package-foundry` in your development dependencies and install it
+- Run `package-foundry migrate` in the main directory of your package. It renames `.ambient-package-update/` to
+  `.package-foundry/` and switches the imports in `metadata.py` and in ejected templates to `package_foundry`
+- Run `package-foundry render-templates`
+
+Until a package is migrated, `package-foundry` keeps reading `.ambient-package-update/` and prints a warning.
 
 ## How to create a new package
 
@@ -38,28 +49,28 @@ Just follow these steps if you want to create a new package and maintain it usin
 
 - Create a new repo at GitHub
 - Check out the new repository in the same directory this updater lives in (not inside the updater!)
-- Create a directory ".ambient-package-update" and create a file "metadata.py" inside.
+- Create a directory ".package-foundry" and create a file "metadata.py" inside.
 
 ```python
-from ambient_package_update.metadata.author import PackageAuthor
-from ambient_package_update.metadata.constants import (
+from package_foundry.metadata.author import PackageAuthor
+from package_foundry.metadata.constants import (
     DEV_DEPENDENCIES,
     DEPLOYMENT_STATUS_STABLE,
     LICENSE_MIT,
     SUPPORTED_DJANGO_VERSIONS,
     SUPPORTED_PYTHON_VERSIONS,
 )
-from ambient_package_update.metadata.maintainer import PackageMaintainer
-from ambient_package_update.metadata.package import PackageMetadata
-from ambient_package_update.metadata.readme import ReadmeContent
-from ambient_package_update.metadata.ruff_ignored_inspection import (
+from package_foundry.metadata.maintainer import PackageMaintainer
+from package_foundry.metadata.package import PackageMetadata
+from package_foundry.metadata.readme import ReadmeContent
+from package_foundry.metadata.ruff_ignored_inspection import (
     RuffIgnoredInspection,
     RuffFilePatternIgnoredInspection,
 )
 
 METADATA = PackageMetadata(
     package_name="my_package_name",
-    github_package_group="ambient-innovation",
+    github_package_group="beyonder-deutschland",
     licenser="Beyonder Deutschland",
     license=LICENSE_MIT,
     development_status=DEPLOYMENT_STATUS_STABLE,
@@ -110,13 +121,13 @@ METADATA = PackageMetadata(
 
 ### Metadata reference
 
-`PackageMetadata` (in `ambient_package_update.metadata.package`) is the single configuration object that drives
+`PackageMetadata` (in `package_foundry.metadata.package`) is the single configuration object that drives
 all rendered files. The following fields are **required** (no default value):
 
 | Field | Type | Description |
 |-------|------|-------------|
 | `package_name` | `str` | The distribution/module name, e.g. `django_pony_express`. Underscores are converted to hyphens for the GitHub/PyPI name. |
-| `github_package_group` | `str` | The GitHub owner/organization the repo lives under, e.g. `ambient-innovation`. Used for repo, issue and security-advisory URLs. |
+| `github_package_group` | `str` | The GitHub owner/organization the repo lives under, e.g. `beyonder-deutschland`. Used for repo, issue and security-advisory URLs. |
 | `licenser` | `str` | The copyright holder written into the `LICENSE.md` file. |
 | `authors` | `list[PackageAuthor]` | One or more `PackageAuthor(name, email)` entries; rendered into `pyproject.toml`. |
 | `maintainer` | `PackageMaintainer` | A single `PackageMaintainer(name, url, email)`. The email is used as the Code-of-Conduct contact. |
@@ -149,13 +160,13 @@ The following fields are **optional** (defaults shown):
 short headline, `content` is the free-form body, and `uses_internationalisation` toggles the translation-workflow
 section in `CONTRIBUTING.md`.
 
-Useful presets live in `ambient_package_update.metadata.constants`: `DEV_DEPENDENCIES`, `SUPPORTED_PYTHON_VERSIONS`,
+Useful presets live in `package_foundry.metadata.constants`: `DEV_DEPENDENCIES`, `SUPPORTED_PYTHON_VERSIONS`,
 `SUPPORTED_DJANGO_VERSIONS`, `READTHEDOCS_PYTHON_VERSIONS`, the `LICENSE_*` values, and the `DEPLOYMENT_STATUS_*` classifiers.
 
-- Install the `ambient_package_update` package
+- Install the `package_foundry` package
   ```
   # ideally in a virtual environment
-  pip install ambient-package-update
+  pip install package-foundry
   ```
 - Add `docs/index.rst` and link your readme and changelog to have a basic documentation (surely, you can add or write
   more custom docs if you want!)
@@ -168,14 +179,14 @@ To customize the templates, you can use the `eject-template` command.
 Simply run
 
 ```bash
-python -m ambient_package_update.cli eject-template
+package-foundry eject-template
 ```
 
 from the root of your project and select the template you want to eject.
-The chosen template will be copied to `.ambient-package-update/templates`, ready to be customized.
+The chosen template will be copied to `.package-foundry/templates`, ready to be customized.
 
-If you want to overwrite template manually, you can find the default templates in the `ambient_package_update/templates` directory.
-You can overwrite them by creating a `.ambient-package-update/templates` directory in your project
+If you want to overwrite template manually, you can find the default templates in the `package_foundry/templates` directory.
+You can overwrite them by creating a `.package-foundry/templates` directory in your project
 and create a new file with the same name as the template you want to overwrite.
 
 ## Releasing a new version
@@ -203,9 +214,9 @@ Before the pipeline can run for the first time, an admin must:
 
 2. **Configure PyPI Trusted Publisher**
    - Go to *PyPI → Project settings → Publishing → Add a new publisher*
-   - Fill in: Owner `ambient-innovation`, Repository `ambient-package-update`,
+   - Fill in: Owner `beyonder-deutschland`, Repository `package-foundry`,
      Workflow `release.yml`, Environment `pypi`
 
 ## Changelog
 
-Can be found at [GitHub](https://github.com/ambient-innovation/ambient-package-update/blob/master/CHANGES.md).
+Can be found at [GitHub](https://github.com/beyonder-deutschland/package-foundry/blob/main/CHANGES.md).
