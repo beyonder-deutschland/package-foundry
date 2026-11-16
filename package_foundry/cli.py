@@ -10,15 +10,23 @@ from pathlib import Path
 import typer
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from ambient_package_update.metadata.constants import (
+from package_foundry.metadata.constants import (
     DJANGO_PYTHON_COMPATIBILITY,
     LICENSE_GPL,
     READTHEDOCS_PYTHON_VERSIONS,
 )
-from ambient_package_update.metadata.package import PackageMetadata
+from package_foundry.metadata.package import PackageMetadata
 
 BASE_PATH = Path(__file__).parent
 TEMPLATE_PATH = BASE_PATH / "templates"
+
+CONFIG_DIR = Path(".package-foundry")
+LEGACY_CONFIG_DIR = Path(".ambient-package-update")
+# Package and module names of the ambient-package-update distribution, mapped to their package-foundry counterparts
+LEGACY_NAMES = {
+    "ambient_package_update": "package_foundry",
+    "ambient-package-update": "package-foundry",
+}
 
 app = typer.Typer()
 
@@ -27,14 +35,30 @@ app = typer.Typer()
 def get_metadata() -> PackageMetadata:
     """
     Load and return the PackageMetadata instance from the target package's
-    .ambient-package-update/metadata.py file.
+    .package-foundry/metadata.py file.
+
+    Packages still configured for ambient-package-update are pointed to the migrate command.
     """
-    sys.path.append("./.ambient-package-update")
+    if not CONFIG_DIR.exists() and LEGACY_CONFIG_DIR.exists():
+        raise RuntimeError(
+            f'Found "{LEGACY_CONFIG_DIR}" from ambient-package-update. Run "package-foundry migrate" to move it to '
+            f'"{CONFIG_DIR}".'
+        )
+
+    sys.path.append(f"./{CONFIG_DIR}")
     try:
         m = import_module("metadata")
     except ModuleNotFoundError as e:
-        raise RuntimeError('Please create a directory ".ambient-package-update" and add a "metadata.py".') from e
-    sys.path.pop()
+        if e.name == "metadata":
+            raise RuntimeError(f'Please create a directory "{CONFIG_DIR}" and add a "metadata.py".') from e
+        if e.name and e.name.split(".")[0] in LEGACY_NAMES:
+            raise RuntimeError(
+                f'"{CONFIG_DIR / "metadata.py"}" imports from "{e.name}". Run "package-foundry migrate" to switch it '
+                f'to "package_foundry".'
+            ) from e
+        raise
+    finally:
+        sys.path.pop()
 
     return m.METADATA
 
@@ -109,7 +133,7 @@ def create_rendered_file(*, template: Path | str, relative_target_path: Path | s
     """
     Render a single Jinja2 template and write the result to relative_target_path.
 
-    The Jinja2 environment searches .ambient-package-update/templates/ first, then the
+    The Jinja2 environment searches .package-foundry/templates/ first, then the
     built-in templates directory, so local overrides take precedence. Template globals
     (version, current_year, license_label) are injected alongside the package metadata.
     Output is post-processed to collapse consecutive blank lines and ensure a single
@@ -131,7 +155,7 @@ def create_rendered_file(*, template: Path | str, relative_target_path: Path | s
     env = Environment(
         loader=FileSystemLoader(
             [
-                ".ambient-package-update/templates",
+                CONFIG_DIR / "templates",
                 TEMPLATE_PATH,
             ]
         ),
@@ -193,13 +217,13 @@ def get_template_list(*, include_snippets: bool = False) -> list[str]:
 def get_local_template_list(*, include_snippets: bool = False) -> list[str]:
     """
     Return relative template paths from the target package's local template directory
-    (.ambient-package-update/templates/).
+    (.package-foundry/templates/).
 
     These are package-specific templates that have no built-in counterpart, such as
     extra documentation pages. Returns an empty list if the directory does not exist.
     Snippets are excluded by default.
     """
-    local_template_path = Path(".ambient-package-update/templates")
+    local_template_path = CONFIG_DIR / "templates"
     if not local_template_path.exists():
         return []
     return [
@@ -314,13 +338,14 @@ def run_tests():
     dependency_list = " ".join(f'"{d}"' for d in dependency_list)
     subprocess.call(f"pip install {dependency_list}", shell=True)
 
-    subprocess.call("pytest --ds settings tests", shell=True)
+    django_settings = "--ds settings " if package_data.tests_require_django else ""
+    subprocess.call(f"pytest {django_settings}tests", shell=True)
 
 
 @app.command()
 def eject_template():
     """
-    Interactively copy a built-in template into .ambient-package-update/templates/ so
+    Interactively copy a built-in template into .package-foundry/templates/ so
     the target package can customise it. Only built-in templates are listed; locally
     overridden templates are already present in that directory.
     """
@@ -341,9 +366,65 @@ def eject_template():
 
     contents = Path(TEMPLATE_PATH / template).read_text()
 
-    output = Path(".ambient-package-update/templates") / template
+    output = CONFIG_DIR / "templates" / template
     os.makedirs(output.parent, exist_ok=True)
     output.write_text(contents)
+
+
+@app.command()
+def migrate():
+    """
+    Move the target package from ambient-package-update to package-foundry.
+
+    Renames .ambient-package-update/ to .package-foundry/ and replaces the ambient-package-update
+    package and module names in every file inside it, i.e. metadata.py and ejected templates.
+    Running it again on an already migrated package only repeats the replacement, so an interrupted
+    migration can be finished. Run render-templates afterwards so the rendered files pick up the new names.
+    """
+    if LEGACY_CONFIG_DIR.exists():
+        if CONFIG_DIR.exists():
+            typer.secho(
+                f'Both "{LEGACY_CONFIG_DIR}" and "{CONFIG_DIR}" exist. Move the remaining files from '
+                f'"{LEGACY_CONFIG_DIR}" to "{CONFIG_DIR}", delete it and run this command again.',
+                fg=typer.colors.RED,
+                err=True,
+            )
+            raise typer.Exit(code=1)
+        LEGACY_CONFIG_DIR.rename(CONFIG_DIR)
+        print(f'> Renamed "{LEGACY_CONFIG_DIR}" to "{CONFIG_DIR}".')
+    elif not CONFIG_DIR.exists():
+        typer.secho(
+            f'Neither "{CONFIG_DIR}" nor "{LEGACY_CONFIG_DIR}" found. Run this command from the package root.',
+            fg=typer.colors.RED,
+            err=True,
+        )
+        raise typer.Exit(code=1)
+
+    skipped_paths = []
+    for path in sorted(CONFIG_DIR.rglob("*")):
+        if not path.is_file() or "__pycache__" in path.parts:
+            continue
+        try:
+            content = path.read_text(encoding="utf-8", newline="")
+        except UnicodeDecodeError:
+            skipped_paths.append(path)
+            continue
+        migrated = content
+        for legacy_name, name in LEGACY_NAMES.items():
+            migrated = migrated.replace(legacy_name, name)
+        if migrated != content:
+            path.write_text(migrated, encoding="utf-8", newline="")
+            print(f'> Updated "{path}".')
+
+    for path in skipped_paths:
+        typer.secho(
+            f'> Skipped "{path}" because it is not UTF-8 encoded. Replace any '
+            f"{' / '.join(LEGACY_NAMES)} in it by hand.",
+            fg=typer.colors.YELLOW,
+            err=True,
+        )
+
+    print('Migration finished. Run "package-foundry render-templates" to update the rendered files.')
 
 
 if __name__ == "__main__":

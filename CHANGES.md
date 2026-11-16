@@ -1,5 +1,21 @@
 # Changelog
 
+**26.11.3 (2026-11-16)**
+* **Breaking:** Renamed the project to `package-foundry`. The PyPI package is `package-foundry`, the module
+  `package_foundry`, the configuration directory `.package-foundry/`, and the repository moved to
+  [beyonder-deutschland/package-foundry](https://github.com/beyonder-deutschland/package-foundry)
+* Added the `package-foundry` console command, e.g. `package-foundry render-templates`
+* Added the `migrate` command, which renames `.ambient-package-update/` to `.package-foundry/` and switches the
+  imports inside it to `package_foundry`
+* Rendering a package that still has an `.ambient-package-update/` directory or imports `ambient_package_update`
+  stops with a hint to run `migrate`
+* The `run-tests` command passes `--ds settings` only when `tests_require_django` is set
+* Author, licence holder and the rendered Sphinx copyright name Beyonder GmbH; contact email is hello@beyonder.eu
+* Rendered packages reference `package-foundry` in their development dependencies, pre-commit configuration, ruff
+  configuration and maintenance notice
+* The test command in the rendered `CONTRIBUTING.md` passes `--ds settings` only when `tests_require_django` is set,
+  like the coverage command does
+
 **26.11.2 (2026-11-16)**
 * The rendered documentation badge is served by shields.io. Read the Docs answers its own badge URL with a redirect,
   which GitHub's image proxy does not follow, so the badge showed as broken in the rendered README

@@ -173,7 +173,7 @@ line-ending = "auto"
   # Checks for packages that are missing an __init__.py file
   "INP001",
 ]
-".ambient-package-update/*.py" = [
+".package-foundry/*.py" = [
   # Checks for packages that are missing an __init__.py file
   "INP001",
 ]

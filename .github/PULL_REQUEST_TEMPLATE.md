@@ -16,4 +16,4 @@ Fixes #(issue)
 - [ ] My code follows the style guidelines of this project (pre-commit passes)
 - [ ] I have updated the documentation where necessary
 - [ ] I have added an entry to `CHANGES.md`
-- [ ] I have bumped the version in `ambient_package_update/__init__.py`
+- [ ] I have bumped the version in `package_foundry/__init__.py`

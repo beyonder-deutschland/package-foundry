@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "ambient-package-update"
+name = "package-foundry"
 authors = [
-    {'name' = 'Beyonder Deutschland', 'email' = 'hello@beyonder.de'},
+    {'name' = 'Beyonder GmbH', 'email' = 'hello@beyonder.eu'},
 ]
 readme = "README.md"
 classifiers = [
@@ -23,7 +23,7 @@ classifiers = [
     "Topic :: Utilities",
 ]
 dynamic = ["version"]
-description = "Ambient package update tool for clean and swift maintenance"
+description = "Render and maintain the boilerplate of many Python and Django packages from a single metadata file."
 license = {"file" = "LICENSE.md"}
 requires-python = ">=3.13"
 dependencies = [
@@ -34,6 +34,9 @@ dependencies = [
     "uv~=0.13",
 ]
 
+[project.scripts]
+package-foundry = "package_foundry.cli:app"
+
 [dependency-groups]
 dev = [
     # Linting
@@ -41,11 +44,11 @@ dev = [
 ]
 
 [project.urls]
-'Homepage' = 'https://github.com/ambient-innovation/ambient-package-update/'
-'Documentation' = 'https://github.com/ambient-innovation/ambient-package-update/blob/master/README.md'
+'Homepage' = 'https://github.com/beyonder-deutschland/package-foundry/'
+'Documentation' = 'https://github.com/beyonder-deutschland/package-foundry/blob/main/README.md'
 'Maintained by' = 'https://beyonder.de/'
-'Bugtracker' = 'https://github.com/ambient-innovation/ambient-package-update/issues'
-'Changelog' = 'https://github.com/ambient-innovation/ambient-package-update/blob/master/CHANGES.md'
+'Bugtracker' = 'https://github.com/beyonder-deutschland/package-foundry/issues'
+'Changelog' = 'https://github.com/beyonder-deutschland/package-foundry/blob/main/CHANGES.md'
 
 [tool.ruff]
 lint.select = [
@@ -155,4 +158,4 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 
 [tool.hatch.version]
-path = "ambient_package_update/__init__.py"
+path = "package_foundry/__init__.py"

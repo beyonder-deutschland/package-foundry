@@ -18,7 +18,7 @@ repos:
         args: [--line-length, "120"]
         additional_dependencies:
         - black==26.10.1
-        files: '(?:README\.md|\.ambient-package-update\/templates\/snippets\/.*\.tpl|docs\/.*\.(?:md|rst))'
+        files: '(?:README\.md|\.package-foundry\/templates\/snippets\/.*\.tpl|docs\/.*\.(?:md|rst))'
 
   - repo: https://github.com/asottile/pyupgrade
     rev: v3.22.0

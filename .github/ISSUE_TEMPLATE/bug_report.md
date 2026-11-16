@@ -24,7 +24,7 @@ A clear and concise description of what you expected to happen.
 
 ## Environment
 
-- `ambient-package-update` version:
+- `package-foundry` version:
 - Python version:
 - Operating system:
 

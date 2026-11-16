@@ -4,8 +4,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Project Does
 
-`ambient-package-update` is a CLI tool that renders Jinja2 templates to maintain consistent structure, configuration,
-and best practices across multiple Python packages. Target packages create a `.ambient-package-update/metadata.py` file
+`package-foundry` is a CLI tool that renders Jinja2 templates to maintain consistent structure, configuration,
+and best practices across multiple Python packages. Target packages create a `.package-foundry/metadata.py` file
 describing their package, then run this tool to regenerate all boilerplate files (pyproject.toml, README.md, CI
 workflows, etc.).
 
@@ -32,7 +32,7 @@ This project has **no test suite** — it is intentionally untested in CI (only 
 ## Architecture
 
 ```
-ambient_package_update/
+package_foundry/
 ├── cli.py              # Typer CLI: render_templates, eject_template, run_tests, build_docs
 ├── metadata/           # Dataclass models for package configuration
 │   ├── package.py      # PackageMetadata — central config object
@@ -47,14 +47,14 @@ ambient_package_update/
 
 **Template rendering flow** (`render_templates` command):
 
-1. Load `PackageMetadata` from the target package's `.ambient-package-update/metadata.py`
+1. Load `PackageMetadata` from the target package's `.package-foundry/metadata.py`
 2. Extract the current version from the target module's `__init__.py`
-3. Build a Jinja2 environment with two template search paths: `.ambient-package-update/templates/` (project overrides)
-   then `ambient_package_update/templates/` (defaults)
+3. Build a Jinja2 environment with two template search paths: `.package-foundry/templates/` (project overrides)
+   then `package_foundry/templates/` (defaults)
 4. Render each template with the metadata as context, post-process whitespace, and write output files
 
 **Versioning**: CalVer format `YY.MM.RELEASE` (e.g., `26.2.1`). Version is stored in
-`ambient_package_update/__init__.py` and managed by hatchling.
+`package_foundry/__init__.py` and managed by hatchling.
 
 ## Code Style
 

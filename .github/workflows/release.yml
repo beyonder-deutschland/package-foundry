@@ -14,16 +14,16 @@ jobs:
     uses: ./.github/workflows/quality-gate.yml
 
   check-branch:
-    name: Verify tag is on master
+    name: Verify tag is on main
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
-      - name: Fail if tag is not on master
+      - name: Fail if tag is not on main
         run: |
-          git fetch origin master
-          git merge-base --is-ancestor "${{ github.sha }}" origin/master
+          git fetch origin main
+          git merge-base --is-ancestor "${{ github.sha }}" origin/main
 
   build:
     name: Build distribution packages

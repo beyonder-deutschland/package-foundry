@@ -1,12 +1,12 @@
 import dataclasses
 import datetime
 
-from ambient_package_update.metadata.author import PackageAuthor
-from ambient_package_update.metadata.constants import LICENSE_MIT
-from ambient_package_update.metadata.executables import ScriptExecutable
-from ambient_package_update.metadata.maintainer import PackageMaintainer
-from ambient_package_update.metadata.readme import ReadmeContent
-from ambient_package_update.metadata.ruff_ignored_inspection import (
+from package_foundry.metadata.author import PackageAuthor
+from package_foundry.metadata.constants import LICENSE_MIT
+from package_foundry.metadata.executables import ScriptExecutable
+from package_foundry.metadata.maintainer import PackageMaintainer
+from package_foundry.metadata.readme import ReadmeContent
+from package_foundry.metadata.ruff_ignored_inspection import (
     RuffFilePatternIgnoredInspection,
     RuffIgnoredInspection,
 )
