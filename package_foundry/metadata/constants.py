@@ -1,6 +1,6 @@
 DEV_DEPENDENCIES = [
     # Updater
-    "typer~=0.27",
+    "typer~=0.29",
     # Test runner
     "pytest-cov~=7.1",
     "pytest-django~=4.14",
@@ -8,7 +8,7 @@ DEV_DEPENDENCIES = [
     # Linting
     "pre-commit~=4.7",
     # Documentation
-    "sphinx~=8.2",
+    "sphinx~=9.0",
     "sphinx-rtd-theme~=3.1",
     "sphinx-mdinclude~=0.6",
     # Release

@@ -1,5 +1,12 @@
 # Changelog
 
+**26.11.4 (2026-11-17)**
+* Rendered packages use Sphinx 9 (`sphinx~=9.0`) in their development dependencies. uv picks the newest 9.x release
+  that supports the package's lowest Python version: 9.0 for Python 3.11, 9.1 for 3.12, 9.2 from 3.13 on
+* Updated `typer` to 0.29 in package-foundry and in the rendered development dependencies
+* Updated the ruff pre-commit hook to v0.17.5 and `astral-sh/setup-uv` to v10.3.3, in package-foundry and in the
+  rendered templates
+
 **26.11.3 (2026-11-16)**
 * **Breaking:** Renamed the project to `package-foundry`. The PyPI package is `package-foundry`, the module
   `package_foundry`, the configuration directory `.package-foundry/`, and the repository moved to
