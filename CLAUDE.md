@@ -12,8 +12,8 @@ workflows, etc.).
 ## Commands
 
 ```bash
-# Install dependencies (including dev extras)
-uv sync --frozen --extra dev
+# Install dependencies (uv includes the dev dependency group by default)
+uv sync --frozen
 
 # Lint and format
 ruff format .

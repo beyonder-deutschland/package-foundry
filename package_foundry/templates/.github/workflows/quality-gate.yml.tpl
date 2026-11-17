@@ -57,7 +57,7 @@ jobs:
         with:
           python-version: {% raw %}${{ matrix.python-version }}{% endraw %}
       - name: Install uv
-        uses: astral-sh/setup-uv@v10.3.0
+        uses: astral-sh/setup-uv@v10.3.3
         with:
           cache-suffix: {% raw %}${{ github.ref_type }}{% endraw %}
       - name: Install tox
