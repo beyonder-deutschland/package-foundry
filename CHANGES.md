@@ -1,5 +1,9 @@
 # Changelog
 
+**26.11.5 (2026-11-17)**
+* The rendered development dependencies install `package-foundry` only on Python 3.13 and newer, so packages that
+  still support older Python versions can be locked with uv again
+
 **26.11.4 (2026-11-17)**
 * Rendered packages use Sphinx 9 (`sphinx~=9.0`) in their development dependencies. uv picks the newest 9.x release
   that supports the package's lowest Python version: 9.0 for Python 3.11, 9.1 for 3.12, 9.2 from 3.13 on
