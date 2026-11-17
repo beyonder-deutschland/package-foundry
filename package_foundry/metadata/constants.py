@@ -14,8 +14,8 @@ DEV_DEPENDENCIES = [
     # Release
     "uv~=0.13",
     "keyring~=25.7",
-    # Build
-    "package-foundry",
+    # Build. package-foundry needs Python 3.13+, while rendered packages may support older versions
+    'package-foundry; python_version >= "3.13"',
 ]
 
 SUPPORTED_DJANGO_VERSIONS = [
