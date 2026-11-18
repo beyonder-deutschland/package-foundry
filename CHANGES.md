@@ -1,10 +1,15 @@
 # Changelog
 
 **26.11.6 (2026-11-18)**
-* `render-templates` creates the module directory and its `__init__.py` before rendering, so it works on a new
-  package that has only `.package-foundry/metadata.py`
-* `optional_dependencies`, `ruff_ignore_list` and `ruff_file_based_ignore_list` default to empty values, so a
-  `metadata.py` without them renders
+* `render-templates` works on a new package that has only `.package-foundry/metadata.py`. The module's `__init__.py`
+  is no longer required for rendering and is created afterwards
+* `render-templates` no longer adds a second `__version__ = "1.0.0"` to an `__init__.py` whose version uses single
+  quotes or isn't `MAJOR.MINOR.PATCH`, which made the package build as version 1.0.0
+* `render-templates` reads and writes `__init__.py` as UTF-8, so a `claim` with non-ASCII characters no longer breaks
+  the import of the package on Windows, and backslashes in the `claim` are written as they are
+* `ruff_ignore_list` and `ruff_file_based_ignore_list` default to empty lists, so a `metadata.py` without them
+  renders. `optional_dependencies` defaults to an empty dict, and `render-templates` stops with a hint if it has no
+  `dev` extra, which the rendered CI, tox and Read the Docs setup install
 * The README walks through setting up a new package step by step, including the module's `__init__.py`, tests,
   documentation, Read the Docs, executable scripts and editable installs, and describes the release steps of a
   package

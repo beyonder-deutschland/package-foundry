@@ -29,9 +29,8 @@ These steps will tell you how to update a package which was created by using thi
 - Navigate to the root directory of **your** package and activate its virtual environment
 - Run `package-foundry render-templates`
 - Review the changes in the rendered files
-- Increment `__version__` in `<module_name>/__init__.py`. It has to be in double quotes and follow the
-  `MAJOR.MINOR.PATCH` pattern (e.g. `__version__ = "1.2.3"`), otherwise the version is not picked up by the rendered
-  files
+- Increment `__version__` in `<module_name>/__init__.py` (e.g. `__version__ = "1.2.3"`). The build reads the package
+  version from there
 - Add an entry for the new version to `CHANGES.md`
 - Release the new version as described in the "Releasing a new version" section of the rendered `README.md`
 
@@ -141,7 +140,7 @@ METADATA = PackageMetadata(
    Linux or macOS. This is needed once per package:
    ```bash
    git add scripts/unix
-   git update-index --chmod=+x scripts/unix/*.sh
+   git update-index --chmod=+x scripts/unix/install_requirements.sh scripts/unix/publish_to_pypi.sh
    ```
 6. Install your package with its development dependencies by running `scripts/unix/install_requirements.sh` or
    `scripts/windows/install_requirements.ps1`. Both call `uv sync`, which installs the package in editable mode.
@@ -211,7 +210,7 @@ The following fields are **optional** (defaults shown):
 | `tests_require_django` | `bool` | `True` | Whether the test setup needs a Django settings module. |
 | `github_package_name` | `str` | derived | Overrides the GitHub repo name (defaults to `package_name` with hyphens). |
 | `module_name` | `str` | derived | Overrides the importable module name (defaults to `package_name` with underscores). |
-| `optional_dependencies` | `dict[str, list[str]]` | `{}` | Extras, e.g. `{"dev": [*DEV_DEPENDENCIES]}`. The `dev` extra is what CI and Read the Docs install, so in practice every package needs it. |
+| `optional_dependencies` | `dict[str, list[str]]` | `{}` | Extras, e.g. `{"dev": [*DEV_DEPENDENCIES]}`. The `dev` extra is what CI, tox and Read the Docs install, so `render-templates` stops if it is missing. |
 | `ruff_ignore_list` | `list[RuffIgnoredInspection]` | `[]` | Global ruff rule ignores. |
 | `ruff_file_based_ignore_list` | `list[RuffFilePatternIgnoredInspection]` | `[]` | Per-file-pattern ruff ignores. |
 | `script_executables` | `list[ScriptExecutable]` | `[]` | Console entry points, each `ScriptExecutable(name, import_path)`. |
