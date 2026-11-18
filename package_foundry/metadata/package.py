@@ -33,9 +33,9 @@ class PackageMetadata:
     tests_require_django: bool = True
     github_package_name: str = None
     module_name: str | None = None
-    optional_dependencies: dict[str, list[str]] = None
-    ruff_ignore_list: list[RuffIgnoredInspection] = None
-    ruff_file_based_ignore_list: list[RuffFilePatternIgnoredInspection] = None
+    optional_dependencies: dict[str, list[str]] = dataclasses.field(default_factory=dict)
+    ruff_ignore_list: list[RuffIgnoredInspection] = dataclasses.field(default_factory=list)
+    ruff_file_based_ignore_list: list[RuffFilePatternIgnoredInspection] = dataclasses.field(default_factory=list)
     script_executables: list[ScriptExecutable] = dataclasses.field(default_factory=list)
     gitignore_list: list[str] = dataclasses.field(default_factory=list)
 

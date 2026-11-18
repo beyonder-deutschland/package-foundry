@@ -28,6 +28,9 @@ LEGACY_NAMES = {
     "ambient-package-update": "package-foundry",
 }
 
+# Matches a __version__ assignment the way hatch reads it: single or double quotes, any version string
+VERSION_REGEX = re.compile(r"""^__version__\s*=\s*(["'])(?P<version>.+?)\1""", flags=re.MULTILINE)
+
 app = typer.Typer()
 
 
@@ -129,6 +132,34 @@ def get_readthedocs_python_version(*, python_versions: list[str]) -> str:
     return available_versions[-1]
 
 
+def validate_dev_extra(*, optional_dependencies: dict[str, list[str]]) -> None:
+    """
+    Abort rendering if the "dev" extra is missing.
+
+    The rendered CI, tox and Read the Docs configuration install the "dev" extra, so without it
+    the package renders fine but its pipelines and documentation builds fail later.
+    """
+    if "dev" not in optional_dependencies:
+        raise RuntimeError(
+            'optional_dependencies has no "dev" extra. The rendered CI, tox and Read the Docs setup install it, '
+            'so add e.g. optional_dependencies={"dev": [*DEV_DEPENDENCIES]} to the metadata.'
+        )
+
+
+def get_package_version(*, module_name: str) -> str | None:
+    """
+    Return the __version__ of the target package's module, or None if the module or the
+    assignment doesn't exist.
+
+    Accepts the same notation hatch reads the version from: single or double quotes, any version string.
+    """
+    init_file = Path.cwd() / module_name / "__init__.py"
+    if not init_file.exists():
+        return None
+    match = VERSION_REGEX.search(init_file.read_text(encoding="utf-8"))
+    return match["version"] if match else None
+
+
 def create_rendered_file(*, template: Path | str, relative_target_path: Path | str) -> None:
     """
     Render a single Jinja2 template and write the result to relative_target_path.
@@ -151,6 +182,7 @@ def create_rendered_file(*, template: Path | str, relative_target_path: Path | s
     metadata_dict["readthedocs_python_version"] = get_readthedocs_python_version(
         python_versions=metadata_dict["supported_python_versions"],
     )
+    validate_dev_extra(optional_dependencies=metadata_dict["optional_dependencies"])
 
     env = Environment(
         loader=FileSystemLoader(
@@ -166,12 +198,11 @@ def create_rendered_file(*, template: Path | str, relative_target_path: Path | s
 
     j2_template = env.get_template(str(template).replace("\\", "/"))
 
-    # Get version from file
-    regex = r'__version__\s*=\s*"(\d+\.\d+\.\d+)"'
-    with open(Path.cwd() / metadata_dict["module_name"] / "__init__.py") as f:
-        match = re.search(regex, f.read())
-    if match:
-        j2_template.globals["version"] = match[1]
+    # The built-in templates don't use "version", but ejected or package-specific templates may.
+    # On a new package the module doesn't exist before the first render, so "version" stays undefined then.
+    version = get_package_version(module_name=metadata_dict["module_name"])
+    if version:
+        j2_template.globals["version"] = version
 
     j2_template.globals["current_year"] = datetime.now(tz=UTC).date().year
     j2_template.globals["license_label"] = (
@@ -249,29 +280,29 @@ def setup_package_basics(metadata_dict: dict) -> None:
 
     # Check for __init__.py and create if missing
     init_file = module_path / "__init__.py"
+    docstring = f'"""{metadata_dict["claim"]}"""'
     if not init_file.exists():
         print("> Creating __init__.py with claim and version...")
-        init_file.write_text(f'"""{metadata_dict["claim"]}"""\n\n__version__ = "1.0.0"\n')
+        init_file.write_text(f'{docstring}\n\n__version__ = "1.0.0"\n', encoding="utf-8")
     else:
         print("> Updating __init__.py claim...")
-        content = init_file.read_text()
+        content = init_file.read_text(encoding="utf-8")
 
-        # Extract existing version if present
-        regex = r'__version__\s*=\s*"(\d+\.\d+\.\d+)"'
-        match = re.search(regex, content)
-        version = match[1] if match else "1.0.0"
+        # Replace claim at the beginning (first docstring). A function as replacement keeps
+        # backslashes in the claim literal instead of reading them as regex escapes.
+        content = re.sub(r'^""".*?"""', lambda _: docstring, content, count=1, flags=re.DOTALL)
 
-        # Replace claim at the beginning (first docstring)
-        content = re.sub(r'^""".*?"""', f'"""{metadata_dict["claim"]}"""', content, count=1, flags=re.DOTALL)
-
-        # Ensure __version__ is present
-        if not re.search(regex, content):
-            # Add version after the docstring
+        # Add a version after the docstring only if there is no __version__ assignment at all
+        if not VERSION_REGEX.search(content):
             content = re.sub(
-                r'^(""".*?""")\s*', rf'\1\n\n__version__ = "{version}"\n', content, count=1, flags=re.DOTALL
+                r'^(""".*?""")\s*',
+                lambda match: f'{match[1]}\n\n__version__ = "1.0.0"\n',
+                content,
+                count=1,
+                flags=re.DOTALL,
             )
 
-        init_file.write_text(content)
+        init_file.write_text(content, encoding="utf-8")
 
 
 @app.command()

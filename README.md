@@ -26,11 +26,16 @@ This project follows the CalVer versioning pattern: `YY.MM.[RELEASE]`
 
 These steps will tell you how to update a package which was created by using this updater.
 
-- Navigate to the main directory of **your** package
-- Activate your virtualenv
+- Navigate to the root directory of **your** package and activate its virtual environment
 - Run `package-foundry render-templates`
-- Validate the changes and increment the version accordingly
-- Release a new version of your target package
+- Review the changes in the rendered files
+- Increment `__version__` in `<module_name>/__init__.py` (e.g. `__version__ = "1.2.3"`). The build reads the package
+  version from there
+- Add an entry for the new version to `CHANGES.md`
+- Release the new version as described in the "Releasing a new version" section of the rendered `README.md`
+
+All commands and scripts in this README and in the rendered files (`package-foundry`, `pytest`, `scripts/unix/*`,
+`scripts/windows/*`) expect to be run from the root directory of your package.
 
 ## Migrating from ambient-package-update
 
@@ -48,9 +53,13 @@ it finishes an interrupted migration.
 
 Just follow these steps if you want to create a new package and maintain it using this updater.
 
-- Create a new repo at GitHub
-- Check out the new repository in the same directory this updater lives in (not inside the updater!)
-- Create a directory ".package-foundry" and create a file "metadata.py" inside.
+1. Create a new repository at GitHub and clone it.
+2. Create a virtual environment in the repository root, activate it and install `package-foundry`:
+   ```bash
+   pip install package-foundry
+   ```
+3. Create a directory `.package-foundry` and a file `metadata.py` inside. The
+   [Metadata reference](#metadata-reference) below explains all fields.
 
 ```python
 from package_foundry.metadata.author import PackageAuthor
@@ -120,6 +129,56 @@ METADATA = PackageMetadata(
 )
 ```
 
+4. Render the templates from the repository root:
+   ```bash
+   package-foundry render-templates
+   ```
+   If the module directory (e.g. `pony_express/`) or its `__init__.py` does not exist yet, the command creates it
+   with the `claim` as docstring and `__version__ = "1.0.0"`. Every run replaces that docstring with the current
+   `claim`, so change the `claim` in `metadata.py` instead of the docstring.
+5. Mark the rendered shell scripts as executable in git. Otherwise they cannot be run directly after a checkout on
+   Linux or macOS. This is needed once per package:
+   ```bash
+   git add scripts/unix
+   git update-index --chmod=+x scripts/unix/install_requirements.sh scripts/unix/publish_to_pypi.sh
+   ```
+6. Install your package with its development dependencies by running `scripts/unix/install_requirements.sh` or
+   `scripts/windows/install_requirements.ps1`. Both call `uv sync`, which installs the package in editable mode.
+   Without uv, run `pip install -e ".[dev]"`. To try your local changes in another project, install the checkout
+   there in editable mode as well, e.g. `pip install -e ../pony-express`
+   (see [pip's editable installs](https://pip.pypa.io/en/stable/topics/local-project-installs/#editable-installs)).
+7. Put your tests into a `tests/` directory in the repository root, next to the module directory and not inside it.
+   The rendered pytest, tox and coverage configuration runs `tests/` and measures the coverage of the module only,
+   and the tests stay out of the published wheel. A Django app that only exists for the tests goes into `testapp/`
+   next to it. If `tests_require_django` is `True` (the default), add a Django `settings.py` to the repository root as
+   well, because the tests run with `--ds settings`.
+8. Write the documentation. `render-templates` creates `docs/conf.py`, `docs/Makefile` and `docs/make.bat`, the
+   content is up to you. Add at least these two files:
+   - `docs/index.rst`, the start page:
+     ```rst
+     pony-express
+     ============
+
+     .. mdinclude:: ../README.md
+
+     .. toctree::
+        :maxdepth: 1
+
+        features/changelog
+     ```
+   - `docs/features/changelog.rst`, which the rendered `pyproject.toml` links to as "Changelog":
+     ```rst
+     .. mdinclude:: ../../CHANGES.md
+     ```
+
+   Build the documentation locally with `sphinx-build docs/ docs/_build/html/`.
+9. Publish the documentation on [Read the Docs](https://readthedocs.org/): import the GitHub repository there. The
+   project slug has to be the package name with hyphens (e.g. `pony-express`), because the rendered `pyproject.toml`
+   links to `https://<slug>.readthedocs.io`. The rendered `.readthedocs.yaml` configures the build. Check under
+   *Admin → Integrations* that the GitHub webhook exists, so the documentation is rebuilt on every push.
+10. Set up the release pipeline as described in "First-time setup" in the rendered `README.md`, add a first entry to
+    `CHANGES.md` and release the first version.
+
 ### Metadata reference
 
 `PackageMetadata` (in `package_foundry.metadata.package`) is the single configuration object that drives
@@ -134,7 +193,7 @@ all rendered files. The following fields are **required** (no default value):
 | `maintainer` | `PackageMaintainer` | A single `PackageMaintainer(name, url, email)`. The email is used as the Code-of-Conduct contact. |
 | `development_status` | `str` | A trove classifier such as `DEPLOYMENT_STATUS_STABLE`. See `metadata.constants` for the presets. |
 | `readme_content` | `ReadmeContent` | Controls the generated `README.md` (see below). |
-| `claim` | `str` | One-line package description. Used as the `pyproject.toml` description and the `__init__.py` docstring. |
+| `claim` | `str` | One-line package description. Used as the `pyproject.toml` description (shown on PyPI) and as the `__init__.py` docstring. Not part of the README, which uses `readme_content.tagline` instead. |
 | `has_migrations` | `bool` | Whether the package ships Django migrations. Enables the migration-integrity CI job when `True`. |
 | `dependencies` | `list[str]` | Runtime dependencies (PEP 508 specifiers). |
 | `supported_python_versions` | `list[str]` | Python versions for the CI test matrix, e.g. `SUPPORTED_PYTHON_VERSIONS`. Every version has to appear in `DJANGO_PYTHON_COMPATIBILITY` and be supported by at least one of the `supported_django_versions`. At least one version has to be in `READTHEDOCS_PYTHON_VERSIONS`; the newest of those is used for Read the Docs builds. |
@@ -151,9 +210,9 @@ The following fields are **optional** (defaults shown):
 | `tests_require_django` | `bool` | `True` | Whether the test setup needs a Django settings module. |
 | `github_package_name` | `str` | derived | Overrides the GitHub repo name (defaults to `package_name` with hyphens). |
 | `module_name` | `str` | derived | Overrides the importable module name (defaults to `package_name` with underscores). |
-| `optional_dependencies` | `dict[str, list[str]]` | `None` | Extras, e.g. `{"dev": [*DEV_DEPENDENCIES]}`. The `dev` extra is what CI and Read the Docs install. |
-| `ruff_ignore_list` | `list[RuffIgnoredInspection]` | `None` | Global ruff rule ignores. |
-| `ruff_file_based_ignore_list` | `list[RuffFilePatternIgnoredInspection]` | `None` | Per-file-pattern ruff ignores. |
+| `optional_dependencies` | `dict[str, list[str]]` | `{}` | Extras, e.g. `{"dev": [*DEV_DEPENDENCIES]}`. The `dev` extra is what CI, tox and Read the Docs install, so `render-templates` stops if it is missing. |
+| `ruff_ignore_list` | `list[RuffIgnoredInspection]` | `[]` | Global ruff rule ignores. |
+| `ruff_file_based_ignore_list` | `list[RuffFilePatternIgnoredInspection]` | `[]` | Per-file-pattern ruff ignores. |
 | `script_executables` | `list[ScriptExecutable]` | `[]` | Console entry points, each `ScriptExecutable(name, import_path)`. |
 | `gitignore_list` | `list[str]` | `[]` | Extra `.gitignore` entries appended to the defaults. |
 
@@ -163,16 +222,6 @@ section in `CONTRIBUTING.md`.
 
 Useful presets live in `package_foundry.metadata.constants`: `DEV_DEPENDENCIES`, `SUPPORTED_PYTHON_VERSIONS`,
 `SUPPORTED_DJANGO_VERSIONS`, `READTHEDOCS_PYTHON_VERSIONS`, the `LICENSE_*` values, and the `DEPLOYMENT_STATUS_*` classifiers.
-
-- Install the `package_foundry` package
-  ```
-  # ideally in a virtual environment
-  pip install package-foundry
-  ```
-- Add `docs/index.rst` and link your readme and changelog to have a basic documentation (surely, you can add or write
-  more custom docs if you want!)
-- Enable the readthedocs hook in your GitHub repo to update your documentation on a commit basis
-- Finally, follow the steps of the section above (`How to update a package`).
 
 ### Customizing the templates
 
