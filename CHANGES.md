@@ -1,5 +1,14 @@
 # Changelog
 
+**26.11.6 (2026-11-18)**
+* `render-templates` creates the module directory and its `__init__.py` before rendering, so it works on a new
+  package that has only `.package-foundry/metadata.py`
+* `optional_dependencies`, `ruff_ignore_list` and `ruff_file_based_ignore_list` default to empty values, so a
+  `metadata.py` without them renders
+* The README walks through setting up a new package step by step, including the module's `__init__.py`, tests,
+  documentation, Read the Docs, executable scripts and editable installs, and describes the release steps of a
+  package
+
 **26.11.5 (2026-11-17)**
 * The rendered development dependencies install `package-foundry` only on Python 3.13 and newer, so packages that
   still support older Python versions can be locked with uv again

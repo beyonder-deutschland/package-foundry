@@ -283,7 +283,13 @@ def render_templates():
     the same path, the local version takes precedence (handled by Jinja2's loader
     ordering). The LICENSE.md file is rendered separately as it is chosen conditionally
     based on the configured license type.
+
+    The module directory and its __init__.py are set up before rendering, because every
+    template reads the package version from that file.
     """
+    metadata_dict = get_metadata().__dict__
+    setup_package_basics(metadata_dict)
+
     # Collect all template files; local templates shadow built-in ones with the same path
     template_list = list(dict.fromkeys([*get_template_list(), *get_local_template_list()]))
 
@@ -299,14 +305,10 @@ def render_templates():
         )
 
     # The licence file is conditional, so we have to render it separately
-    metadata_dict = get_metadata().__dict__
     create_rendered_file(
         template=f"snippets/licenses/{metadata_dict['license']}.md",
         relative_target_path="LICENSE.md",
     )
-
-    # Package basics
-    setup_package_basics(metadata_dict)
 
     print("Rendering finished.")
 
